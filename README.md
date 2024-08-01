@@ -1,4 +1,4 @@
-toy implementations of whatever I happen to be reading
+Toy implementations of whatever I happen to be reading.
 
 ## Example
 ```sh
