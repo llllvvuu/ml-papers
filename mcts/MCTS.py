@@ -1,14 +1,15 @@
 import math
-import random
 from typing import Protocol, Self, TypeVar, cast
 
 
 class MCTSState(Protocol):
     def next_states(self) -> list[Self]: ...
 
+    def random_rollout(self) -> tuple[float, int]: ...
+
     def is_terminal(self) -> bool: ...
 
-    def terminal_reward(self) -> object: ...
+    def reward(self) -> object: ...
 
     def reward_perspective(self, reward: object) -> float: ...
 
@@ -56,12 +57,7 @@ class MCTSNode[TState]:
         return child
 
     def simulate(self) -> tuple[object, int]:
-        state = cast(MCTSState, self.state)
-        depth = 0
-        while not state.is_terminal():
-            state = random.choice(state.next_states())
-            depth += 1
-        return state.terminal_reward(), depth
+        return cast(MCTSState, self.state).random_rollout()
 
     def backpropagate(
         self,

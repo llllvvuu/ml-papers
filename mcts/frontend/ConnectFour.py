@@ -43,7 +43,7 @@ def pve(red: bool, sims: int = DEFAULT_SIMS):
         node = next_node
         if node.state.is_terminal():
             print(node.state)
-            if node.state.terminal_reward() == 0:
+            if node.state.reward() == 0:
                 print("😐 Draw...")
             else:
                 print("🎉 You Win!")
@@ -63,7 +63,7 @@ def pve(red: bool, sims: int = DEFAULT_SIMS):
             print("You win! (AI forfeit)")
         elif node.state.is_terminal():
             print(node.state)
-            if node.state.terminal_reward() == 0:
+            if node.state.reward() == 0:
                 print("😐 Draw...")
             else:
                 print("😭 You Lose!")
@@ -75,9 +75,9 @@ def selfplay(sims: int = DEFAULT_SIMS):
     while node:
         print(node.state)
         if node.state.is_terminal():
-            if node.state.terminal_reward() == 1:
+            if node.state.reward() == 1:
                 print("🎉 Red Wins!")
-            elif node.state.terminal_reward() == -1:
+            elif node.state.reward() == -1:
                 print("🎉 Yellow Wins!")
             else:
                 print("😐 Draw...")
