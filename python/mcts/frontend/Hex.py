@@ -1,32 +1,28 @@
 from ..MCTS import MCTSNode
-from ..ConnectFour import ConnectFour, ConnectFourPiece
+from ..Hex import Hex, HexColor
 
-DEFAULT_SIMS = 1000
+DEFAULT_SIMS = 2500
 
 
-def user_move(node: MCTSNode[ConnectFour], col: int) -> MCTSNode[ConnectFour]:
+def user_move(node: MCTSNode[Hex], row: int, col: int) -> MCTSNode[Hex]:
     new_board = [row.copy() for row in node.state.board]
-    for row in range(ConnectFour.ROWS - 1, -1, -1):
-        if new_board[row][col] == ConnectFourPiece.Empty:
-            new_board[row][col] = (
-                ConnectFourPiece.Red if node.state.red_turn else ConnectFourPiece.Yellow
-            )
-            break
-    else:
-        raise ValueError("Column is full")
+    if new_board[row][col] != HexColor.Empty:
+        raise ValueError("Cell is already occupied")
+
+    new_board[row][col] = HexColor.Blue if node.state.blue_turn else HexColor.Red
 
     if new_board not in map(lambda x: x.board, node.state.next_states()):
         raise ValueError("Invalid move")
 
     return next(
         filter(lambda x: x.state.board == new_board, node.children),
-        MCTSNode(ConnectFour(new_board, not node.state.red_turn), node),
+        MCTSNode(Hex(node.state.size, new_board, not node.state.blue_turn), node),
     )
 
 
-def pve(red: bool, sims: int = DEFAULT_SIMS):
-    node = MCTSNode(ConnectFour(), None)
-    if not red:
+def pve(blue: bool, size: int, sims: int = DEFAULT_SIMS):
+    node = MCTSNode(Hex(size), None)
+    if not blue:
         for _ in range(sims):
             node.run()
         node = node.best_child()
@@ -35,15 +31,19 @@ def pve(red: bool, sims: int = DEFAULT_SIMS):
         while not next_node:
             try:
                 print(node.state)
-                print(" ".join(str(i) for i in range(node.state.COLS)))
-                col = int(input(f"Enter column (0-{ConnectFour.COLS-1}): "))
-                next_node = user_move(node, col)
+                print(
+                    " " * (node.state.size + 1)
+                    + " ".join(str(i) for i in range(node.state.size))
+                )
+                row = int(input(f"Enter row (0-{node.state.size-1}): "))
+                col = int(input(f"Enter column (0-{node.state.size-1}): "))
+                next_node = user_move(node, row, col)
             except (ValueError, IndexError) as e:
                 print(f"⚠️ Invalid move: {e}")
         node = next_node
         if node.state.is_terminal():
             print(node.state)
-            if node.state.terminal_reward() == 0:
+            if node.state.reward() == 0:
                 print("😐 Draw...")
             else:
                 print("🎉 You Win!")
@@ -63,22 +63,22 @@ def pve(red: bool, sims: int = DEFAULT_SIMS):
             print("You win! (AI forfeit)")
         elif node.state.is_terminal():
             print(node.state)
-            if node.state.terminal_reward() == 0:
+            if node.state.reward() == 0:
                 print("😐 Draw...")
             else:
                 print("😭 You Lose!")
             break
 
 
-def selfplay(sims: int = DEFAULT_SIMS):
-    node = MCTSNode(ConnectFour(), None)
+def selfplay(size: int, sims: int = DEFAULT_SIMS):
+    node = MCTSNode(Hex(size), None)
     while node:
         print(node.state)
         if node.state.is_terminal():
-            if node.state.terminal_reward() == 1:
+            if node.state.reward() == 1:
+                print("🎉 Blue Wins!")
+            elif node.state.reward() == -1:
                 print("🎉 Red Wins!")
-            elif node.state.terminal_reward() == -1:
-                print("🎉 Yellow Wins!")
             else:
                 print("😐 Draw...")
             break

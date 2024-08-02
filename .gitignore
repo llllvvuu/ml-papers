@@ -1,2 +1,4 @@
 .venvs
+*.pth
+*.csv
 __pycache__

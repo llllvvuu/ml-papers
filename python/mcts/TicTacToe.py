@@ -1,5 +1,6 @@
 from enum import Enum
-from typing import Self, cast, override
+from random import choice
+from typing import Self, override
 from .MCTS import MCTSState
 
 
@@ -34,13 +35,32 @@ class TicTacToe(MCTSState):
 
     @override
     def next_states(self) -> list[Self]:
-        states: list[MCTSState] = []
+        states: list[Self] = []
         for i, square in enumerate(self.board):
             if square == TicTacToeSquare.Empty:
                 new_board = self.board.copy()
                 new_board[i] = TicTacToeSquare.X if self.X else TicTacToeSquare.O
-                states.append(TicTacToe(new_board, not self.X))
-        return cast(list[Self], states)
+                states.append(self.__class__(new_board, not self.X))
+        return states
+
+    def random_next_state(self) -> Self:
+        empty_indices = [
+            i for i, square in enumerate(self.board) if square == TicTacToeSquare.Empty
+        ]
+        new_board = self.board.copy()
+        new_board[choice(empty_indices)] = (
+            TicTacToeSquare.X if self.X else TicTacToeSquare.O
+        )
+        return self.__class__(new_board, not self.X)
+
+    @override
+    def random_rollout(self) -> tuple[float, int]:
+        state = self
+        depth = 0
+        while not state.is_terminal():
+            state = state.random_next_state()
+            depth += 1
+        return state.reward(), depth
 
     @override
     def is_terminal(self) -> bool:
@@ -51,7 +71,7 @@ class TicTacToe(MCTSState):
         )
 
     @override
-    def terminal_reward(self) -> float:
+    def reward(self) -> float:
         if self.wins(TicTacToeSquare.X):
             return 1
         if self.wins(TicTacToeSquare.O):
@@ -64,6 +84,10 @@ class TicTacToe(MCTSState):
         if self.X:
             return reward
         return -reward
+
+    @override
+    def default_parent_reward_perspective(self, reward: object) -> float:
+        return -self.reward_perspective(reward)
 
     @override
     def __str__(self) -> str:

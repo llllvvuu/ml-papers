@@ -1,5 +1,6 @@
 from enum import Enum
-from typing import Self, cast, override
+from random import choice
+from typing import Self, override
 from .MCTS import MCTSState
 
 
@@ -57,7 +58,7 @@ class ConnectFour(MCTSState):
 
     @override
     def next_states(self) -> list[Self]:
-        states: list[MCTSState] = []
+        states: list[Self] = []
         for col in range(self.COLS):
             if self.board[0][col] == ConnectFourPiece.Empty:
                 new_board = [row.copy() for row in self.board]
@@ -69,8 +70,34 @@ class ConnectFour(MCTSState):
                             else ConnectFourPiece.Yellow
                         )
                         break
-                states.append(ConnectFour(new_board, not self.red_turn))
-        return cast(list[Self], states)
+                states.append(self.__class__(new_board, not self.red_turn))
+        return states
+
+    def random_next_state(self) -> Self:
+        col = choice(
+            [
+                col
+                for col in range(self.COLS)
+                if self.board[0][col] == ConnectFourPiece.Empty
+            ]
+        )
+        new_board = [row.copy() for row in self.board]
+        for row in range(self.ROWS - 1, -1, -1):
+            if new_board[row][col] == ConnectFourPiece.Empty:
+                new_board[row][col] = (
+                    ConnectFourPiece.Red if self.red_turn else ConnectFourPiece.Yellow
+                )
+                break
+        return self.__class__(new_board, not self.red_turn)
+
+    @override
+    def random_rollout(self) -> tuple[float, int]:
+        state = self
+        depth = 0
+        while not state.is_terminal():
+            state = state.random_next_state()
+            depth += 1
+        return state.reward(), depth
 
     @override
     def is_terminal(self) -> bool:
@@ -83,7 +110,7 @@ class ConnectFour(MCTSState):
         )
 
     @override
-    def terminal_reward(self) -> float:
+    def reward(self) -> float:
         if self.wins(ConnectFourPiece.Red):
             return 1
         if self.wins(ConnectFourPiece.Yellow):
@@ -96,6 +123,10 @@ class ConnectFour(MCTSState):
         if self.red_turn:
             return reward
         return -reward
+
+    @override
+    def default_parent_reward_perspective(self, reward: object) -> float:
+        return -self.reward_perspective(reward)
 
     @override
     def __str__(self) -> str:

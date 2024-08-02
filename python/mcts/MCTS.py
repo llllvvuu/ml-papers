@@ -1,16 +1,36 @@
 import math
-import random
 from typing import Protocol, Self, TypeVar, cast
 
 
 class MCTSState(Protocol):
     def next_states(self) -> list[Self]: ...
+    def random_rollout(self) -> tuple[float, int]:
+        """returns: reward, depth"""
+        ...
+
+    # TODO: Replace `next_states()` and `random_rollout()` with these,
+    # for efficiency (current impl wastes a lot of allocations eagerly creating states)
+    # def legal_actions(self) -> list[int]: ...
+    # def act(self, action: int) -> Self: ...
+    # def act_in_place(self, action: int) -> None: ...
+    # def random_rollout_in_place(self) -> tuple[float, int]: ...
 
     def is_terminal(self) -> bool: ...
+    def default_parent_reward_perspective(self, reward: object) -> float:
+        """
+        Given e.g. "blue wins" or "red wins", determine e.g. whether
+        the last player wins.
+        """
+        ...
 
-    def terminal_reward(self) -> object: ...
+    def reward(self) -> object: ...
 
-    def reward_perspective(self, reward: object) -> float: ...
+    def reward_perspective(self, reward: object) -> float:
+        """
+        Given e.g. "blue wins" or "red wins", determine e.g. whether
+        the upcoming player wins.
+        """
+        ...
 
 
 TState = TypeVar("TState", bound=MCTSState)
@@ -56,12 +76,7 @@ class MCTSNode[TState]:
         return child
 
     def simulate(self) -> tuple[object, int]:
-        state = cast(MCTSState, self.state)
-        depth = 0
-        while not state.is_terminal():
-            state = random.choice(state.next_states())
-            depth += 1
-        return state.terminal_reward(), depth
+        return cast(MCTSState, self.state).random_rollout()
 
     def backpropagate(
         self,
@@ -70,6 +85,12 @@ class MCTSNode[TState]:
         log_discount: float = 0,
     ):
         self.visits += 1
+        if self.parent is None:
+            self.reward += cast(
+                MCTSState, self.state
+            ).default_parent_reward_perspective(reward) * math.exp(
+                -log_discount * depth
+            )
         if self.parent is not None:
             self.reward += cast(MCTSState, self.parent.state).reward_perspective(
                 reward
