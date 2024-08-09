@@ -1,4 +1,4 @@
-Toy implementations of whatever I happen to be reading.
+Toy implementations of whatever I happen to be reading. Weights at https://huggingface.co/llllvvuu/ml_tutorials
 
 ## Example
 ```sh
