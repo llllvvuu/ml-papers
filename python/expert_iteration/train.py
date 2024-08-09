@@ -96,7 +96,7 @@ def train(
             expert_value,
             terminal_value,
         ) = expert_iteration.experience(use_policy_network, use_value_network)
-        batch_size, policy_loss, value_loss = expert_iteration.experience_replay(32, 4)
+        batch_size, policy_loss, value_loss = expert_iteration.experience_replay(64, 32)
 
         avg_policy_loss += policy_loss
         avg_value_loss += value_loss
