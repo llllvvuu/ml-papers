@@ -2,5 +2,4 @@
 *.pth
 *.csv
 __pycache__
-_mlx
-_datasets
+embeddings.json

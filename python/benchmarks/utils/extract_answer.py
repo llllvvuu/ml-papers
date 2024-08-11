@@ -18,7 +18,7 @@ def extract_boxed_answer(response: str) -> str:
             brace_count += 1
         elif response[i] == "}":
             if brace_count == 0:
-                return response[start + COMMAND_LENGTH : i]
+                return response[start + COMMAND_LENGTH : i].strip()
             brace_count -= 1
 
     return ""
