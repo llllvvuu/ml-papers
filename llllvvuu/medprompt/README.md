@@ -21,9 +21,9 @@ In addition, I want to continue tweaking:
 pip install -r requirements.txt
 python embed.py /path/to/MATH/train embeddings.json
 cd ../..
-python -m python.medprompt.mlx-eval \
+python -m llllvvuu.medprompt.mlx-eval \
   /path/to/mlx/model \
-  python/medprompt/embeddings.json \
+  llllvvuu/medprompt/embeddings.json \
   /path/to/MATH/train /path/to/MATH/test 1
 ```
 
